@@ -1,0 +1,17 @@
+{
+  "name": "generator-rnwf",
+  "version": "0.1.0",
+  "description": "Initializes the react native application along with the fabric and firebase",
+  "files": [
+    "generators"
+  ],
+  "keywords": [
+    "yeoman-generator"
+  ],
+  "author": "Damir Khasjanov",
+  "dependencies": {
+    "mkdirp": "^0.5.1",
+    "node-cmd": "^3.0.0",
+    "yeoman-generator": "^3.1.1"
+  }
+}

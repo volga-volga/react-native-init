@@ -13,11 +13,9 @@ const styles = StyleSheet.create({
 
 type Props = {
   navigation: Navigation,
-  screenProps: ScreenProps
 };
 
 export default class Splash extends React.PureComponent<Props> {
-
   navigate(routeName: string): void {
     const resetAction = StackActions.reset({
       index: 0,
@@ -26,7 +24,7 @@ export default class Splash extends React.PureComponent<Props> {
     this.props.navigation.dispatch(resetAction);
   }
 
-  render(): React.Node {
+  render() {
     return <View style={styles.container} />;
   }
 }

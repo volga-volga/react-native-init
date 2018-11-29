@@ -6,10 +6,9 @@ const path = require('path');
 const fs = require('fs');
 
 function copyFiles(newSource, newTarget) {
-  // console.log(this);
+
   function copyFileSync(source, target) {
     var targetFile = target;
-    //if target is a directory a new file with the same name will be created
     if (fs.existsSync(target)) {
       if (fs.lstatSync(target).isDirectory()) {
         targetFile = path.join(target, path.basename(source));
@@ -19,12 +18,10 @@ function copyFiles(newSource, newTarget) {
   }
   function copyFolderRecursiveSync(source, target) {
     var files = [];
-    //check if folder needs to be created or integrated
     var targetFolder = path.join(target, path.basename(source));
     if (!fs.existsSync(targetFolder)) {
       fs.mkdirSync(targetFolder);
     }
-    //copy
     if (fs.lstatSync(source).isDirectory()) {
       files = fs.readdirSync(source);
       files.forEach(function(file) {
@@ -72,14 +69,24 @@ class AppGenerator extends Generator {
   copyStructure() {
     copyFiles(this.copyDirectory, `${this.contextRoot}/${this.appName}/`);
   }
+
   async installingDependencies() {
     process.chdir(this.contextRoot + '/' + this.appName);
     await syncNpmInstall(this.spawnCommandSync, 'react-native-firebase');
     this.npmInstall(['react-navigation'], { save: true });
     if (this.redux) {
-      this.npmInstall(['redux', 'redux-thunk', 'redux-logger', 'react-redux'], {
-        save: true
-      });
+      this.npmInstall(
+        [
+          'redux',
+          'redux-thunk',
+          'redux-logger',
+          'react-redux',
+          'react-navigation-redux-helpers'
+        ],
+        {
+          save: true
+        }
+      );
     }
     if (this.icons) {
       await syncNpmInstall(this.spawnCommandSync, 'react-native-vector-icons');
@@ -295,10 +302,8 @@ class AppGenerator extends Generator {
       .replace(
         new RegExp('dependencies {', 'g'),
         'dependencies {\n' +
-          `implementation 'com.google.firebase:firebase-core:16.0.1'
-            compile(project(':react-native-firebase')) {
-                transitive = false
-            }
+          `implementation 'com.google.firebase:firebase-core:16.0.4'
+            implementation project(':react-native-firebase')
             implementation('com.crashlytics.sdk.android:crashlytics:2.9.4@aar') {
               transitive = true
             }

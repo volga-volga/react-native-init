@@ -1,9 +1,9 @@
-import { createStackNavigator } from 'react-navigation';
+import { createStackNavigator, createAppContainer } from 'react-navigation';
 import { Animated, Easing } from 'react-native';
 import * as screens from './routeNames';
 import Splash from '../screens/Splash/Splash';
 
-const nullHeaderNavigationOptions = { header: null };
+const nullHeaderNavigationOptions = { header: () => null };
 
 const AppNavigator = createStackNavigator(
   {
@@ -40,4 +40,6 @@ const AppNavigator = createStackNavigator(
   }
 );
 
-export default AppNavigator;
+const AppContainer = createAppContainer(AppNavigator);
+
+export default AppContainer;

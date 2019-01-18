@@ -37,3 +37,4 @@ module.exports = [
     message: 'Do you want to install vector icons',
     default: true
   }
+]

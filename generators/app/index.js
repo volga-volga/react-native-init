@@ -1,12 +1,11 @@
-'use strict';
-const Generator = require('yeoman-generator');
-const mkdirp = require('mkdirp');
-const prompts = require('./prompts');
-const path = require('path');
-const fs = require('fs');
+"use strict";
+const Generator = require("yeoman-generator");
+const mkdirp = require("mkdirp");
+const prompts = require("./prompts");
+const path = require("path");
+const fs = require("fs");
 
 function copyFiles(newSource, newTarget) {
-
   function copyFileSync(source, target) {
     var targetFile = target;
     if (fs.existsSync(target)) {
@@ -38,7 +37,7 @@ function copyFiles(newSource, newTarget) {
 }
 
 function syncNpmInstall(spawnCommandSync, packageName) {
-  spawnCommandSync('npm', ['install', '--save', packageName]);
+  spawnCommandSync("npm", ["install", "--save", packageName]);
 }
 
 class AppGenerator extends Generator {
@@ -55,15 +54,18 @@ class AppGenerator extends Generator {
       this.apiKey = answers.apiKey;
       this.buildSecrect = answers.buildSecrect;
       this.packageName = answers.packageName;
-      this.IOS_DIR = this.contextRoot + '/' + this.appName + '/ios';
-      this.APP_DIR = this.contextRoot + '/' + this.appName;
-      this.copyDirectory = path.join(this._sourceRoot, '../../copy/app');
+      this.IOS_DIR = this.contextRoot + "/" + this.appName + "/ios";
+      this.APP_DIR = this.contextRoot + "/" + this.appName;
+      this.copyDirectory = path.join(
+        this._sourceRoot,
+        `../../copy/${this.redux ? "withRedux" : "withoutRedux"}/app`
+      );
     });
   }
 
   initApp() {
-    this.spawnCommandSync('react-native', ['init', this.appName]);
-    process.chdir(this.contextRoot + '/' + this.appName);
+    this.spawnCommandSync("react-native", ["init", this.appName]);
+    process.chdir(this.contextRoot + "/" + this.appName);
   }
 
   copyStructure() {
@@ -71,17 +73,17 @@ class AppGenerator extends Generator {
   }
 
   async installingDependencies() {
-    process.chdir(this.contextRoot + '/' + this.appName);
-    await syncNpmInstall(this.spawnCommandSync, 'react-native-firebase');
-    this.npmInstall(['react-navigation'], { save: true });
+    process.chdir(this.contextRoot + "/" + this.appName);
+    await syncNpmInstall(this.spawnCommandSync, "react-native-firebase");
+    this.npmInstall(["react-navigation"], { save: true });
     if (this.redux) {
       this.npmInstall(
         [
-          'redux',
-          'redux-thunk',
-          'redux-logger',
-          'react-redux',
-          'react-navigation-redux-helpers'
+          "redux",
+          "redux-thunk",
+          "redux-logger",
+          "react-redux",
+          "react-navigation-redux-helpers"
         ],
         {
           save: true
@@ -89,16 +91,16 @@ class AppGenerator extends Generator {
       );
     }
     if (this.icons) {
-      await syncNpmInstall(this.spawnCommandSync, 'react-native-vector-icons');
+      await syncNpmInstall(this.spawnCommandSync, "react-native-vector-icons");
     }
   }
 
   async initPod() {
     console.log(this.IOS_DIR);
     process.chdir(this.IOS_DIR);
-    this.spawnCommandSync('pod', ['init']);
+    this.spawnCommandSync("pod", ["init"]);
     await fs.writeFileSync(
-      this.IOS_DIR + '/' + 'Podfile',
+      this.IOS_DIR + "/" + "Podfile",
       `target '${this.appName}' do
         require 'xcodeproj'
         pod 'Firebase/Core'
@@ -126,7 +128,7 @@ class AppGenerator extends Generator {
                 project = Xcodeproj::Project.open(path_to_project)
                 main_target = project.targets.first
                 phase = main_target.new_shell_script_build_phase("FABRIC")
-                phase.shell_script = '"${'${PODS_ROOT}'}/Fabric/run" ${
+                phase.shell_script = '"${"${PODS_ROOT}"}/Fabric/run" ${
         this.apiKey
       } ${this.buildSecrect}'
                 project.save()
@@ -140,30 +142,30 @@ class AppGenerator extends Generator {
               end
           end\n`
     );
-    console.log('Podfile saved');
+    console.log("Podfile saved");
   }
 
   linkDependences() {
     process.chdir(this.APP_DIR);
-    this.spawnCommandSync('react-native', ['link', 'react-native-firebase']);
+    this.spawnCommandSync("react-native", ["link", "react-native-firebase"]);
     if (this.icons) {
-      this.spawnCommandSync('react-native', [
-        'link',
-        'react-native-vector-icons'
+      this.spawnCommandSync("react-native", [
+        "link",
+        "react-native-vector-icons"
       ]);
     }
   }
 
   podInstallAndCleanPodfile() {
     process.chdir(this.IOS_DIR);
-    this.spawnCommandSync('pod', ['install']);
-    const firstData = fs.readFileSync(this.IOS_DIR + '/Podfile', 'utf8');
+    this.spawnCommandSync("pod", ["install"]);
+    const firstData = fs.readFileSync(this.IOS_DIR + "/Podfile", "utf8");
 
     let data = firstData
       .toString()
-      .replace(/.*# REPLACE(.*\n)*.*# REPLACE/g, '');
-    fs.writeFileSync(this.IOS_DIR + '/Podfile', data);
-    console.log('Clean Podfile');
+      .replace(/.*# REPLACE(.*\n)*.*# REPLACE/g, "");
+    fs.writeFileSync(this.IOS_DIR + "/Podfile", data);
+    console.log("Clean Podfile");
   }
 
   async changeAndroidBundleID() {
@@ -172,14 +174,14 @@ class AppGenerator extends Generator {
     }/android/app/src/main/java`;
     process.chdir(JAVA_PACKAGE_DIR);
 
-    const dirs = this.packageName.split('.').map(dir => dir.toLowerCase());
-    const DEST_PATH = dirs.join('/');
+    const dirs = this.packageName.split(".").map(dir => dir.toLowerCase());
+    const DEST_PATH = dirs.join("/");
     const JAVA_SOURCE_DIR = `${JAVA_PACKAGE_DIR}/${DEST_PATH}/${this.appName.toLowerCase()}`;
     console.log(JAVA_SOURCE_DIR);
-    let now = '/';
+    let now = "/";
     for (let dir of dirs) {
       mkdirp(`${JAVA_PACKAGE_DIR}${now}${dir}`);
-      now += dir + '/';
+      now += dir + "/";
     }
     await new Promise(r => setTimeout(() => r(), 1000));
     console.log(`${JAVA_PACKAGE_DIR}/${DEST_PATH}`);
@@ -188,14 +190,14 @@ class AppGenerator extends Generator {
       `${JAVA_PACKAGE_DIR}/com/${this.appName.toLowerCase()}`,
       `${JAVA_PACKAGE_DIR}/${DEST_PATH}`
     );
-    this.spawnCommandSync('rm', ['-rf', `${JAVA_PACKAGE_DIR}/com`]);
+    this.spawnCommandSync("rm", ["-rf", `${JAVA_PACKAGE_DIR}/com`]);
 
     const ApplicationStream = fs.readFileSync(
       `${JAVA_SOURCE_DIR}/MainApplication.java`,
-      'utf8'
+      "utf8"
     );
     const ApplicationString = ApplicationStream.toString().replace(
-      new RegExp(`com.${this.appName.toLowerCase()}`, 'g'),
+      new RegExp(`com.${this.appName.toLowerCase()}`, "g"),
       `${this.packageName}.${this.appName.toLowerCase()}`
     );
     fs.writeFileSync(
@@ -205,10 +207,10 @@ class AppGenerator extends Generator {
 
     const ActivityStream = fs.readFileSync(
       `${JAVA_SOURCE_DIR}/MainActivity.java`,
-      'utf8'
+      "utf8"
     );
     const ActivityString = ActivityStream.toString().replace(
-      new RegExp(`com.${this.appName.toLowerCase()}`, 'g'),
+      new RegExp(`com.${this.appName.toLowerCase()}`, "g"),
       `${this.packageName}.${this.appName.toLowerCase()}`
     );
     fs.writeFileSync(`${JAVA_SOURCE_DIR}/MainActivity.java`, ActivityString);
@@ -216,7 +218,7 @@ class AppGenerator extends Generator {
     const APP_BUILD_GRADLE = `${this.contextRoot}/${
       this.appName
     }/android/app/build.gradle`;
-    const gradleStream = fs.readFileSync(`${APP_BUILD_GRADLE}`, 'utf8');
+    const gradleStream = fs.readFileSync(`${APP_BUILD_GRADLE}`, "utf8");
     const gradleString = gradleStream
       .toString()
       .replace(
@@ -226,11 +228,11 @@ class AppGenerator extends Generator {
     fs.writeFileSync(`${APP_BUILD_GRADLE}`, gradleString);
 
     const BUCK = `${this.contextRoot}/${this.appName}/android/app/BUCK`;
-    const buckStream = fs.readFileSync(`${BUCK}`, 'utf8');
+    const buckStream = fs.readFileSync(`${BUCK}`, "utf8");
     const buckString = buckStream
       .toString()
       .replace(
-        new RegExp(`com.${this.appName.toLowerCase()}`, 'g'),
+        new RegExp(`com.${this.appName.toLowerCase()}`, "g"),
         `${this.packageName}.${this.appName.toLowerCase()}`
       );
     fs.writeFileSync(`${BUCK}`, buckString);
@@ -238,7 +240,7 @@ class AppGenerator extends Generator {
     const MANIFEST = `${this.contextRoot}/${
       this.appName
     }/android/app/src/main/AndroidManifest.xml`;
-    const manifestStream = fs.readFileSync(`${MANIFEST}`, 'utf8');
+    const manifestStream = fs.readFileSync(`${MANIFEST}`, "utf8");
     const manifestString = manifestStream
       .toString()
       .replace(
@@ -246,14 +248,14 @@ class AppGenerator extends Generator {
         `${this.packageName}.${this.appName.toLowerCase()}`
       );
     fs.writeFileSync(`${MANIFEST}`, manifestString);
-    console.log('Bundle id changed');
+    console.log("Bundle id changed");
   }
 
   deepLinkAndroidFirebase() {
     const MANIFEST = `${this.contextRoot}/${
       this.appName
     }/android/app/src/main/AndroidManifest.xml`;
-    const manifestStream = fs.readFileSync(`${MANIFEST}`, 'utf8');
+    const manifestStream = fs.readFileSync(`${MANIFEST}`, "utf8");
     const manifestString = manifestStream.toString().replace(
       new RegExp(`</activity>`),
       `</activity>
@@ -268,13 +270,13 @@ class AppGenerator extends Generator {
     process.chdir(this.APP_DIR);
     let firstData = fs.readFileSync(
       `${this.APP_DIR}/android/build.gradle`,
-      'utf8'
+      "utf8"
     );
 
     let firstBuild = firstData
       .toString()
       .replace(
-        new RegExp('dependencies {', 'g'),
+        new RegExp("dependencies {", "g"),
         `dependencies {
           classpath 'com.google.gms:google-services:4.0.1'
           classpath 'io.fabric.tools:gradle:1.25.4'`
@@ -290,7 +292,7 @@ class AppGenerator extends Generator {
     const appBuildGradle = `${this.contextRoot}/${
       this.appName
     }/android/app/build.gradle`;
-    const appBuildGradleData = fs.readFileSync(appBuildGradle, 'utf8');
+    const appBuildGradleData = fs.readFileSync(appBuildGradle, "utf8");
     let newAppBuildGradleData = appBuildGradleData
       .toString()
       .replace(
@@ -298,10 +300,10 @@ class AppGenerator extends Generator {
         `
       apply plugin: "io.fabric"`
       )
-      .replace(/compile project\(':react-native-firebase'\)/g, '')
+      .replace(/compile project\(':react-native-firebase'\)/g, "")
       .replace(
-        new RegExp('dependencies {', 'g'),
-        'dependencies {\n' +
+        new RegExp("dependencies {", "g"),
+        "dependencies {\n" +
           `implementation 'com.google.firebase:firebase-core:16.0.4'
             implementation project(':react-native-firebase')
             implementation('com.crashlytics.sdk.android:crashlytics:2.9.4@aar') {
@@ -315,23 +317,23 @@ class AppGenerator extends Generator {
       apply plugin: 'com.google.gms.google-services'`
     );
     const packageName = this.packageName
-      .split('.')
+      .split(".")
       .map(dir => dir.toLowerCase())
-      .join('/');
+      .join("/");
     const APPLICATION = `${this.contextRoot}/${
       this.appName
     }/android/app/src/main/java/${packageName}/${this.appName.toLowerCase()}/MainApplication.java`;
-    const ApplicationStream = fs.readFileSync(APPLICATION, 'utf8');
+    const ApplicationStream = fs.readFileSync(APPLICATION, "utf8");
     const ApplicationString = ApplicationStream.toString()
       .replace(
-        new RegExp(`import io.invertase.firebase.RNFirebasePackage;`, 'g'),
+        new RegExp(`import io.invertase.firebase.RNFirebasePackage;`, "g"),
         `import io.invertase.firebase.RNFirebasePackage;
          import io.invertase.firebase.fabric.crashlytics.RNFirebaseCrashlyticsPackage;
          import com.crashlytics.android.Crashlytics;
          import io.fabric.sdk.android.Fabric;`
       )
       .replace(
-        new RegExp(`new RNFirebasePackage(),`, 'g'),
+        new RegExp(`new RNFirebasePackage(),`, "g"),
         `new RNFirebasePackage(),
          new RNFirebaseCrashlyticsPackage()`
       )
@@ -346,22 +348,22 @@ class AppGenerator extends Generator {
   deepLinkIOSFirebase() {
     const IOS_SOURCES = `${this.IOS_DIR}/${this.appName}`;
     process.chdir(IOS_SOURCES);
-    const secondData = fs.readFileSync(`${IOS_SOURCES}/AppDelegate.m`, 'utf8');
+    const secondData = fs.readFileSync(`${IOS_SOURCES}/AppDelegate.m`, "utf8");
     let secondBuild = secondData.toString().replace(
-      new RegExp(`@implementation AppDelegate`, 'g'),
+      new RegExp(`@implementation AppDelegate`, "g"),
       `#import <Fabric/Fabric.h>
         #import <Crashlytics/Crashlytics.h>
         @import Firebase;\n\n` + `@implementation AppDelegate`
     );
     let newSecondBuild = secondBuild.replace(
-      new RegExp(`return YES`, 'g'),
+      new RegExp(`return YES`, "g"),
       `[FIRApp configure];
       [Fabric with:@[[Crashlytics class]]];
       return YES`
     );
     fs.writeFileSync(`${IOS_SOURCES}/AppDelegate.m`, newSecondBuild);
 
-    const infoPlistData = fs.readFileSync(`${IOS_SOURCES}/Info.plist`, 'utf8');
+    const infoPlistData = fs.readFileSync(`${IOS_SOURCES}/Info.plist`, "utf8");
     let newInfoPlist = infoPlistData.toString().replace(
       new RegExp(`dict`),
       `dict>
